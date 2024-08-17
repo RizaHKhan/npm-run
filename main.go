@@ -101,7 +101,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("dir:", dir)
 
 	file, err := os.Open(filepath.Join(dir, "package.json"))
 	if err != nil {
