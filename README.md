@@ -4,7 +4,7 @@
 
 Golang TUI to run npm scripts.
 
-Lists out all of the scripts using Bubble Tea.
+Lists out all of the scripts using [Bubble Tea](https://github.com/charmbracelet/bubbletea).
 
 ## Upcoming additions
 
