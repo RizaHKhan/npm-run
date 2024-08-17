@@ -54,7 +54,17 @@ func (m model) View() string {
 }
 
 func main() {
-	file, err := os.Open("package.json")
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("dir:", dir)
+
+	file, err := os.Open(filepath.Join(dir, "package.json"))
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		os.Exit(1)
+	}
 
 	if err != nil {
 		fmt.Println("Error reading file:", err)
@@ -64,8 +74,12 @@ func main() {
 	defer file.Close()
 
 	var pkg Package
-	byteValue, _ := ioutil.ReadAll(file)
-	json.Unmarshal(byteValue, &pkg)
+	byteValue, _ := io.ReadAll(file)
+	err = json.Unmarshal(byteValue, &pkg)
+	if err != nil {
+		fmt.Println("Error parsing file")
+		os.Exit(1)
+	}
 
 	items := make([]list.Item, 0, len(pkg.Scripts))
 	for key, value := range pkg.Scripts {
@@ -82,3 +96,4 @@ func main() {
 		os.Exit(1)
 	}
 }
+
