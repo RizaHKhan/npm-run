@@ -49,14 +49,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			selectedItem := m.list.SelectedItem().(item)
 
 			// Run the command from the item's desc field
-			cmd := exec.Command("sh", "-c", selectedItem.desc)
+			cmd := exec.Command("/bin/sh", "-c", selectedItem.desc)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
+
+			// Get the current directory
+			dir, err := os.Getwd()
+			if err != nil {
+				fmt.Println("Error getting current directory:", err)
+				return m, nil
+			}
+
+			// Add the node_modules/.bin directory to the PATH
+			nodeModulesBin := filepath.Join(dir, "node_modules", ".bin")
+			cmd.Env = append(os.Environ(), "PATH="+os.Getenv("PATH")+":"+nodeModulesBin)
 
 			// Start the command in a new process group
 			cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
-			err := cmd.Start()
+			err = cmd.Start()
 			if err != nil {
 				fmt.Println("Error starting command:", err)
 				return m, nil
@@ -128,4 +139,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-
