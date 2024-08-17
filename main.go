@@ -3,8 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
+	"os/exec"
+	"syscall"
+
+	"log"
+	"path/filepath"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -37,6 +42,33 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
+			return m, tea.Quit
+		}
+		if msg.String() == "enter" {
+			// Get the currently selected item
+			selectedItem := m.list.SelectedItem().(item)
+
+			// Run the command from the item's desc field
+			cmd := exec.Command("sh", "-c", selectedItem.desc)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			// Start the command in a new process group
+			cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+			err := cmd.Start()
+			if err != nil {
+				fmt.Println("Error starting command:", err)
+				return m, nil
+			}
+
+			go func() {
+				err = cmd.Wait()
+				if err != nil {
+					fmt.Println("Error waiting for command to finish:", err)
+				}
+			}()
+
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
